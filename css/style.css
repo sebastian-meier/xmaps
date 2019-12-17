@@ -1,0 +1,108 @@
+body, html{
+  margin:0;
+  padding:0;
+  border:none;
+  box-sizing: border-box;
+  font-family: Helvetica, Arial, sans-serif;
+}
+
+#map{
+  width: 500px;
+  height: 500px;
+}
+
+.leaflet-container .leaflet-control-search.leaflet-control{
+  box-shadow: 0 1px 5px rgba(0,0,0,0.65);
+  border:none;
+}
+
+.leaflet-container .leaflet-control-search.leaflet-control .search-button{
+  width: 26px;
+  height: 26px;
+  background-size:18px auto;
+}
+
+.leaflet-container .leaflet-control-search.leaflet-control .search-button:hover{
+  background-size:18px auto;
+  background-position:4px -18px;
+}
+
+.leaflet-control-search .search-cancel {
+  background-size:18px auto;
+  background-position:4px -41px;
+}
+
+.leaflet-top.leaflet-right{
+  top:50%;
+  right:50%;
+  margin-right:-25px;
+  margin-top:-25px;
+}
+
+.centerMarker{
+  pointer-events: none;
+  padding:0 !important;
+  margin:0 !important;
+}
+
+svg{
+  border:2px solid black;
+}
+
+#overlay{
+  display: none;
+  position:fixed;
+  top:0;
+  left:0;
+  width:100%;
+  height:100%;
+  background-color:rgba(255,255,255,0.7);
+  z-index: 99999;
+}
+
+#overlay>div{
+  position:fixed;
+  top:50%;
+  left:50%;
+  width:140px;
+  margin: -70px 0 0 -70px;
+  text-align: center;
+  font-style: italic;
+}
+
+#overlay>div>div{
+  padding:3px;
+  display: block;
+  width:100px;
+  height:100px;
+  background-image:url(../images/_loader-bg.png);
+  background-size: 106px 106px;
+  margin:0 auto 10px auto;
+}
+
+.colorpicker, .colorpicker tr, .colorpicker td{
+  border: none;
+  margin:0;
+  padding:0;
+}
+
+.colorpicker{
+  border-top: 1px solid black;
+  border-left: 1px solid black;
+}
+
+.colorpicker td{
+  border-bottom: 1px solid black;
+  border-right: 1px solid black;
+  width:10px;
+  height:10px;
+  cursor: pointer;
+}
+
+.colordisplay{
+  width: 20px;
+  height:20px;
+  display: block;
+  border: 1px solid black;
+  background-color:#000;
+}

@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="50px" height="50px" viewBox="0 0 50 50" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <!-- Generator: Sketch 60 (88103) - https://sketch.com -->
+    <title>centerMarker</title>
+    <desc>Created with Sketch.</desc>
+    <g id="centerMarker" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <circle id="Oval" stroke="#000000" stroke-width="3" cx="25" cy="25" r="23"></circle>
+        <circle id="Oval" fill="#000000" cx="25" cy="25" r="6"></circle>
+    </g>
+</svg>
