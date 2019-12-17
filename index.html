@@ -56,23 +56,42 @@
 <body>
   <header></header>
   <main>
-    <div id="vis"></div>
     <div id="map"></div>
     <div id="controls">
-      <label for="stroke-control">Modify stroke width</label>
-      <input type="checkbox" id="stroke-control" />
-      <label>Color 1</label>
-      <input type="text" value="#000000" id="color1" /><span class="colordisplay" id="display-color1"></span>
-      <table cellspacing="0" cellpadding="0" id="picker-color1" class="colorpicker"></table>
-      <label>Color 2</label>
-      <input type="text" value="#000000" id="color2" /><span class="colordisplay" id="display-color2"></span>
-      <table cellspacing="0" cellpadding="0" id="picker-color2" class="colorpicker"></table>
-      <label for="label-big">Big Label (optional)</label>
-      <input type="text" id="label-big" />
-      <label for="label-small">Small Label (optional)</label>
-      <input type="text" id="label-small" />
-      <button id="btn-render">Render Map</button>
+      <h1>Create your map</h1>
+
+      <div class="control-el">
+        <label class="colorlabel">Inner Color&nbsp;<span class="colordisplay" id="display-color1"></span></label><br />
+        <input type="text" value="#000000" id="color1" />
+        <table cellspacing="0" cellpadding="0" id="picker-color1" class="colorpicker"></table>
+      </div>
+
+      <div class="control-el mobile-float">
+        <label class="colorlabel">Outer Color&nbsp;<span class="colordisplay" id="display-color2"></span></label><br />
+        <input type="text" value="#000000" id="color2" />
+        <table cellspacing="0" cellpadding="0" id="picker-color2" class="colorpicker"></table>
+      </div>
+
+      <div class="control-el">
+          <input type="checkbox" id="stroke-control" />
+          <label for="stroke-control">Modify stroke width</label>
+      </div>
+  
+      <div class="control-el">
+        <label for="label-big">Big Label (optional)</label><br />
+        <input type="text" id="label-big" />
+      </div>
+
+      <div class="control-el">
+        <label for="label-small">Small Label (optional)</label><br />
+        <input type="text" id="label-small" />
+      </div>
+
+      <div class="control-el">
+        <button id="btn-render">Render Map</button>
+      </div>
     </div>
+    <div id="vis"></div>
   </main>
   <footer></footer>
   <div id="overlay">
