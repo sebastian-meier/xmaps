@@ -8,6 +8,7 @@ var render_1 = require("./render");
 colorPicker_1.colorPicker("color1");
 colorPicker_1.colorPicker("color2");
 /* ---.--- ADDING THE MAP ---.--- */
+var cache = {};
 var longitude = 13.308507;
 var latitude = 52.466716;
 var selectionMap = L.map("map").setView([latitude, longitude], 15);
@@ -35,6 +36,10 @@ centerControl.onAdd = function (map) {
 centerControl.addTo(selectionMap);
 d3.select("#btn-render").on("click", function () {
     var latLng = selectionMap.getCenter();
-    render_1.render(latLng.lat, latLng.lng, d3.select("#color1").property("value"), d3.select("#color2").property("value"), d3.select("#stroke-control").property("checked"), d3.select("#label-big").property("value"), d3.select("#label-small").property("value"));
+    render_1.render(latLng.lat, latLng.lng, d3.select("#color1").property("value"), d3.select("#color2").property("value"), d3.select("#stroke-control").property("checked"), d3.select("#label-big").property("value"), d3.select("#label-small").property("value")).then(function () {
+        // REMOVE OVERLAY
+    }).catch(function (err) {
+        throw err;
+    });
 });
 //# sourceMappingURL=main.js.map

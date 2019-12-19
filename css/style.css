@@ -12,6 +12,10 @@ body, html{
   height: 500px;
 }
 
+#gif-svg, #gif-canvas{
+  display:none;
+}
+
 .leaflet-container .leaflet-control-search.leaflet-control{
   box-shadow: 0 1px 5px rgba(0,0,0,0.65);
   border:none;
@@ -88,17 +92,19 @@ svg{
 }
 
 .colorpicker{
-  border-top: 1px solid black;
-  border-left: 1px solid black;
   margin-top:7px;
 }
 
 .colorpicker td{
-  border-bottom: 1px solid black;
-  border-right: 1px solid black;
+  border: 1px solid rgba(0,0,0,0.3);
+  border-radius:2px;
   width:10px;
   height:10px;
   cursor: pointer;
+}
+
+.colorpicker td:hover{
+  opacity:0.5;
 }
 
 .colordisplay{
@@ -128,7 +134,6 @@ main{
 #controls{
   padding: 0 20px;
   min-height:500px;
-  width: 180px;
 }
 
 #controls label{
@@ -139,6 +144,21 @@ main{
 .control-el{
   padding-bottom:10px;
   display: block;
+  float:left;
+  margin-right:20px;
+}
+
+hr.divider{
+  visibility: hidden;
+  clear:both;
+}
+
+#label-big, #label-small{
+  width:170px;
+  font-size: 14px;
+  border: 1px solid rgba(0,0,0,0.75);
+  padding: 5px;
+  border-radius:2px;
 }
 
 button{

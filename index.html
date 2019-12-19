@@ -56,27 +56,33 @@
 <body>
   <header></header>
   <main>
+    <div id="gif-svg"></div>
+    <div id="gif-canvas"></div>
     <div id="map"></div>
     <div id="controls">
-      <h1>Create your map</h1>
+      <h1>Create your own map</h1>
 
       <div class="control-el">
         <label class="colorlabel">Inner Color&nbsp;<span class="colordisplay" id="display-color1"></span></label><br />
         <input type="text" value="#000000" id="color1" />
-        <table cellspacing="0" cellpadding="0" id="picker-color1" class="colorpicker"></table>
+        <table cellspacing="1" cellpadding="0" id="picker-color1" class="colorpicker"></table>
       </div>
 
       <div class="control-el mobile-float">
         <label class="colorlabel">Outer Color&nbsp;<span class="colordisplay" id="display-color2"></span></label><br />
         <input type="text" value="#000000" id="color2" />
-        <table cellspacing="0" cellpadding="0" id="picker-color2" class="colorpicker"></table>
+        <table cellspacing="1" cellpadding="0" id="picker-color2" class="colorpicker"></table>
       </div>
+
+      <hr class="divider">
 
       <div class="control-el">
           <input type="checkbox" id="stroke-control" />
-          <label for="stroke-control">Modify stroke width</label>
+          <label for="stroke-control">Varying stroke-width</label>
       </div>
-  
+
+      <hr class="divider">
+      
       <div class="control-el">
         <label for="label-big">Big Label (optional)</label><br />
         <input type="text" id="label-big" />
@@ -86,6 +92,8 @@
         <label for="label-small">Small Label (optional)</label><br />
         <input type="text" id="label-small" />
       </div>
+
+      <hr class="divider">
 
       <div class="control-el">
         <button id="btn-render">Render Map</button>

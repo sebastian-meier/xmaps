@@ -9,6 +9,8 @@ colorPicker("color2");
 
 /* ---.--- ADDING THE MAP ---.--- */
 
+const cache = {};
+
 const longitude = 13.308507;
 const latitude = 52.466716;
 
@@ -51,5 +53,9 @@ d3.select("#btn-render").on("click", () => {
     d3.select("#stroke-control").property("checked"),
     d3.select("#label-big").property("value"),
     d3.select("#label-small").property("value"),
-  );
+  ).then(() => {
+    // REMOVE OVERLAY
+  }).catch((err) => {
+    throw err;
+  });
 });
