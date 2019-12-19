@@ -19,6 +19,8 @@ const render = (
   modifyStroke: boolean,
   bigLabel: string,
   smallLabel: string,
+  mirror: string,
+  svgOnly: boolean,
 ): Promise<any> => {
 
   return new Promise((resolve, reject) => {
@@ -40,7 +42,7 @@ const render = (
 
     const request = new XMLHttpRequest();
     request.responseType = "json";
-    request.open("POST", "https://overpass-api.de/api/interpreter");
+    request.open("POST", "https://overpass-api.de/api/interpreter"); // https://overpass.nchc.org.tw/api/interpreter
     request.onload = () => {
 
       const nodeMap = {};
@@ -104,6 +106,58 @@ const render = (
         <stop style="stop-color:${innerColor};" offset="0%"/>\
         <stop style="stop-color:${outerColor};" offset="100%"/>\
       </radialGradient>`);
+
+      defs.append("mask")
+        .attr("id", "mask_" + visID)
+        .html(() => {
+          let mX = width / 2;
+          let mY = height / 2;
+          switch (mirror) {
+            case "2":
+              mX = 0;
+              mY = 0;
+              break;
+            case "3":
+              mY = 0;
+              break;
+            case "4":
+              mX = 0;
+              break;
+          }
+          return `<rect fill="white" x="${mX}" y="${mY}" width="${width / 2}" height="${height / 2}" />`;
+        });
+
+      const pattern = defs.append("pattern")
+        .attr("id", "pattern_" + visID)
+        .attr("viewBox", `0 0 ${width} ${height}`)
+        .attr("width", "100%")
+        .attr("height", "100%");
+
+      for (let pi = 1; pi <= 4; pi += 1) {
+        let patternTransform = "";
+        switch (pi) {
+          case 2:
+            patternTransform = `scale(1,-1) translate(0,${height})`;
+            break;
+          case 3:
+            patternTransform = `scale(-1,-1) translate(${width},${height})`;
+            break;
+          case 4:
+            patternTransform = `scale(-1,1) translate(${width},0)`;
+            break;
+        }
+        const p = defs.append("pattern")
+          .attr("id", "pattern_" + pi + "_" + visID)
+          .attr("viewBox", `0 0 ${width} ${height}`)
+          .attr("width", "100%")
+          .attr("height", "100%")
+          .attr("patternTransform", patternTransform)
+          .html(`<rect fill="url(#pattern_${visID})" x="0" y="0" width="${width}" height="${height}"></rect>`);
+
+        if (mirror !== "6") {
+          p.select("rect").attr("mask", `url(#mask_${visID})`);
+        }
+      }
 
       const group = svg.append("g");
 
@@ -173,7 +227,12 @@ const render = (
 
       const strokeScale = d3.scaleLinear().range([maxStroke, 1]).domain([0, maxDist]);
 
-      group.append("g").selectAll("line")
+      let lineContainer: any = pattern;
+      if (mirror === "1") {
+        lineContainer = group;
+      }
+
+      lineContainer.append("g").selectAll("line")
         .data(lineData).enter().append("line")
           .style("stroke", `url(#gradient_${visID})`)
           .style("stroke-width", (d) => strokeScale(d.dist))
@@ -187,6 +246,17 @@ const render = (
             .delay((d) => d.level * 50)
             .duration(50)
               .style("opacity", 1);
+
+      if (mirror !== "1") {
+        for (let ri = 1; ri <= 4; ri += 1) {
+          group.append("rect")
+            .attr("x", 0)
+            .attr("y", 0)
+            .attr("width", width)
+            .attr("height", height)
+            .attr("fill", `url(#pattern_${ri}_${visID})`);
+        }
+      }
 
       let groupOffset = 0;
 
@@ -236,7 +306,7 @@ const render = (
 
       const offscreenSVG = d3.select("#gif-svg");
       offscreenSVG.selectAll("*").remove();
-      offscreenSVG.html(svgContainer.html().split("gradient_").join("gradient_alt_"));
+      offscreenSVG.html(svgContainer.html().split(visID).join("alt_" + visID));
       offscreenSVG.selectAll("line").data(lineData)
         .style("opacity", 0);
       const bg = offscreenSVG.select("svg").insert("rect", ":first-child");
@@ -252,96 +322,114 @@ const render = (
         .attr("height", height);
       const offscreenContext = offscreenCanvas.node().getContext("2d");
 
-      let gif = new GIF({
-        height,
-        quality: 2,
-        width,
-        workerScript: "./js/gif.worker.js",
-        workers: 2,
-      });
+      const addButtons = async () => {
+        // render one big PNG for downloading
+        offscreenSVG.select("svg")
+          .style("width", width)
+          .style("height", height);
 
-      const renderFrame = async (frameId: number) => {
         offscreenSVG.selectAll("line")
-          .style("opacity", (d: { level: number }) => {
-            if (d.level < frameId) {
-              return 1;
-            }
-            return 0;
-        });
+          .style("opacity", 1);
 
-        const canvgProcess = await Canvg.fromString(offscreenContext, offscreenSVG.html());
-        await canvgProcess.render();
-        gif.addFrame(offscreenContext, {copy: true, delay: 10});
+        offscreenSVG.select("rect").remove();
 
-        if (frameId < maxLevels) {
-          renderFrame(frameId + 1);
-        } else {
+        let svgContent = (offscreenSVG.node() as SVGElement).innerHTML;
+        svgContent = svgContent.replace("<svg", `<?xml version="1.0" standalone="no"?><svg xmlns:xlink="http://www.w3.org/1999/xlink" xmlns="http://www.w3.org/2000/svg"`);
 
-          let svgContent = (offscreenSVG.node() as SVGElement).innerHTML;
-          svgContent = svgContent.replace("<svg", `<?xml version="1.0" standalone="no"?><svg xmlns:xlink="http://www.w3.org/1999/xlink" xmlns="http://www.w3.org/2000/svg"`);
+        svgContainer.append("a")
+          .text("SVG")
+          .attr("href", URL.createObjectURL(new Blob([svgContent], {type: "image/svg+xml;charset=utf-8"})))
+          .attr("download", "map.svg");
 
-          gif.on("finished", async (blob) => {
+        svgContainer.append("a")
+          .text("Replay Animation")
+          .on("click", () => {
+            lineContainer.selectAll("line")
+              .style("opacity", 0)
+              .transition()
+                .delay((d: {level: number}) => d.level * 50)
+                .duration(50)
+                  .style("opacity", 1);
+                  });
 
-            // render one big PNG for downloading
-            offscreenSVG.select("svg")
-              .style("width", width * 5)
-              .style("height", height * 5);
-            
-            offscreenSVG.select("rect").remove();
-
-            offscreenCanvas
-              .attr("width", width * 5)
-              .attr("height", height * 5);
-
-            const canvgEndProcess = await Canvg.fromString(offscreenContext, offscreenSVG.html());
-            await canvgEndProcess.render();
-
-            svgContainer.append("a")
-              .text("GIF")
-              .attr("href", URL.createObjectURL(blob))
-              .attr("download", "map.gif");
-
-            svgContainer.append("a")
-              .text("PNG")
-              .attr("href", offscreenCanvas.node().toDataURL())
-              .attr("download", "map.png");
-
-            svgContainer.append("a")
-              .text("SVG")
-              .attr("href", URL.createObjectURL(new Blob([svgContent], {type: "image/svg+xml;charset=utf-8"})))
-              .attr("download", "map.svg");
-
-            svgContainer.append("a")
-              .text("Replay Animation")
-              .on("click", () => {
-                group.selectAll("line")
-                  .style("opacity", 0)
-                  .transition()
-                    .delay((d: {level: number}) => d.level * 50)
-                    .duration(50)
-                      .style("opacity", 1);
-                      });
-
-            // Making sure the gif system is not taking up any ressources                      
-            gif.freeWorkers.forEach((worker) => {
-              worker.terminate();
-            });
-
-            gif.activeWorkers.forEach((worker) => {
-              worker.terminate();
-            });
-
-            gif = null;
-
-            resolve();
-
-          });
-
-          gif.render();
-        }
+        resolve();
       };
 
-      renderFrame(0);
+      if (!svgOnly && mirror === "1") {
+        let gif = new GIF({
+          height,
+          quality: 2,
+          width,
+          workerScript: "./js/gif.worker.js",
+          workers: 2,
+        });
+
+        gif.on("finished", async (blob) => {
+
+          svgContainer.append("a")
+            .text("GIF")
+            .attr("href", URL.createObjectURL(blob))
+            .attr("download", "map.gif");
+
+          offscreenSVG.select("svg")
+            .style("width", width * 5)
+            .style("height", height * 5);
+
+          offscreenSVG.selectAll("line")
+            .style("opacity", 1);
+
+          offscreenSVG.select("rect").remove();
+
+          offscreenCanvas
+            .attr("width", width * 5)
+            .attr("height", height * 5);
+
+          const canvgEndProcess = await Canvg.fromString(offscreenContext, offscreenSVG.html());
+          await canvgEndProcess.render();
+
+          svgContainer.append("a")
+            .text("PNG")
+            .attr("href", offscreenCanvas.node().toDataURL())
+            .attr("download", "map.png");
+
+          addButtons();
+
+          // Making sure the gif system is not taking up any ressources
+          gif.freeWorkers.forEach((worker) => {
+            worker.terminate();
+          });
+
+          gif.activeWorkers.forEach((worker) => {
+            worker.terminate();
+          });
+
+          gif = null;
+        });
+
+        const renderFrame = async (frameId: number) => {
+          offscreenSVG.selectAll("line")
+            .style("opacity", (d: { level: number }) => {
+              if (d.level < frameId) {
+                return 1;
+              }
+              return 0;
+          });
+
+          const canvgProcess = await Canvg.fromString(offscreenContext, offscreenSVG.html());
+          await canvgProcess.render();
+          gif.addFrame(offscreenContext, {copy: true, delay: 10});
+
+          if (frameId < maxLevels) {
+            renderFrame(frameId + 1);
+          } else {
+            gif.render();
+          }
+        };
+
+        renderFrame(0);
+      } else {
+        addButtons();
+      }
     };
     request.send(encodeURI("data=" + query));
   });

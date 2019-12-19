@@ -9,7 +9,8 @@ body, html{
 #map{
   width: 100%;
   max-width: 500px;
-  height: 500px;
+  height: 50vh;
+  max-height:500px;
 }
 
 #gif-svg, #gif-canvas{

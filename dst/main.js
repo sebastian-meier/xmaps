@@ -35,11 +35,18 @@ centerControl.onAdd = function (map) {
 };
 centerControl.addTo(selectionMap);
 d3.select("#btn-render").on("click", function () {
+    startRender(false);
+});
+d3.select("#btn-render-svg").on("click", function () {
+    startRender(true);
+});
+var startRender = function (svgOnly) {
     var latLng = selectionMap.getCenter();
-    render_1.render(latLng.lat, latLng.lng, d3.select("#color1").property("value"), d3.select("#color2").property("value"), d3.select("#stroke-control").property("checked"), d3.select("#label-big").property("value"), d3.select("#label-small").property("value")).then(function () {
+    var mirrorValue = d3.select('input[name="mirror"]:checked').node().value;
+    render_1.render(latLng.lat, latLng.lng, d3.select("#color1").property("value"), d3.select("#color2").property("value"), d3.select("#stroke-control").property("checked"), d3.select("#label-big").property("value"), d3.select("#label-small").property("value"), mirrorValue, (svgOnly || mirrorValue !== "1") ? true : false).then(function () {
         // REMOVE OVERLAY
     }).catch(function (err) {
         throw err;
     });
-});
+};
 //# sourceMappingURL=main.js.map

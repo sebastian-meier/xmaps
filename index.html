@@ -82,6 +82,18 @@
       </div>
 
       <hr class="divider">
+
+      <div class="control-el">
+        <label for="mirror-control">Mirror roads (no PNG & GIF-support):</label><br />
+        <input type="radio" checked="checked" value="1" name="mirror" id="mirror-control-1" /><label for="mirror-control-1">No Mirror</label>
+        <input type="radio" name="mirror" value="6" id="mirror-control-6" /><label for="mirror-control-6">Full-Mirror</label><br />
+        <input type="radio" name="mirror" value="2" id="mirror-control-2" /><label for="mirror-control-2">Top-Left</label>
+        <input type="radio" name="mirror" value="3" id="mirror-control-3" /><label for="mirror-control-3">Top-Right</label><br />
+        <input type="radio" name="mirror" value="4" id="mirror-control-4" /><label for="mirror-control-4">Bottom-Left</label>
+        <input type="radio" name="mirror" value="5" id="mirror-control-5" /><label for="mirror-control-5">Bottom-Right</label>
+      </div>
+
+      <hr class="divider">
       
       <div class="control-el">
         <label for="label-big">Big Label (optional)</label><br />
@@ -97,6 +109,7 @@
 
       <div class="control-el">
         <button id="btn-render">Render Map</button>
+        <button id="btn-render-svg">Render only SVG</button>
       </div>
     </div>
     <div id="vis"></div>

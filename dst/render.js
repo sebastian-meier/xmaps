@@ -47,7 +47,7 @@ var margin = 20;
 var radius = 200;
 var overpassRadius = 500;
 var maxDist = 0.5;
-var render = function (cLatitude, cLongitude, innerColor, outerColor, modifyStroke, bigLabel, smallLabel) {
+var render = function (cLatitude, cLongitude, innerColor, outerColor, modifyStroke, bigLabel, smallLabel, mirror, svgOnly) {
     return new Promise(function (resolve, reject) {
         var visID = uuid();
         smallLabel = smallLabel.trim();
@@ -55,7 +55,7 @@ var render = function (cLatitude, cLongitude, innerColor, outerColor, modifyStro
         var query = "[out:json][timeout:25];    (      relation[\"highway\"](around:" + overpassRadius + "," + cLatitude + "," + cLongitude + ");      way[\"highway\"](around:" + overpassRadius + "," + cLatitude + "," + cLongitude + ");      node[\"highway\"](around:" + overpassRadius + "," + cLatitude + "," + cLongitude + ");    );    out body;    >;    out skel qt;";
         var request = new XMLHttpRequest();
         request.responseType = "json";
-        request.open("POST", "https://overpass-api.de/api/interpreter");
+        request.open("POST", "https://overpass-api.de/api/interpreter"); // https://overpass.nchc.org.tw/api/interpreter
         request.onload = function () {
             var nodeMap = {};
             var nodes = [];
@@ -102,6 +102,54 @@ var render = function (cLatitude, cLongitude, innerColor, outerColor, modifyStro
                 .attr("height", height);
             var defs = svg.append("defs")
                 .html("<radialGradient gradientUnits=\"userSpaceOnUse\" id=\"gradient_" + visID + "\" cx=\"" + width / 2 + "\" cy=\"" + height / 2 + "\" r=\"" + radius + "\">        <stop style=\"stop-color:" + innerColor + ";\" offset=\"0%\"/>        <stop style=\"stop-color:" + outerColor + ";\" offset=\"100%\"/>      </radialGradient>");
+            defs.append("mask")
+                .attr("id", "mask_" + visID)
+                .html(function () {
+                var mX = width / 2;
+                var mY = height / 2;
+                switch (mirror) {
+                    case "2":
+                        mX = 0;
+                        mY = 0;
+                        break;
+                    case "3":
+                        mY = 0;
+                        break;
+                    case "4":
+                        mX = 0;
+                        break;
+                }
+                return "<rect fill=\"white\" x=\"" + mX + "\" y=\"" + mY + "\" width=\"" + width / 2 + "\" height=\"" + height / 2 + "\" />";
+            });
+            var pattern = defs.append("pattern")
+                .attr("id", "pattern_" + visID)
+                .attr("viewBox", "0 0 " + width + " " + height)
+                .attr("width", "100%")
+                .attr("height", "100%");
+            for (var pi = 1; pi <= 4; pi += 1) {
+                var patternTransform = "";
+                switch (pi) {
+                    case 2:
+                        patternTransform = "scale(1,-1) translate(0," + height + ")";
+                        break;
+                    case 3:
+                        patternTransform = "scale(-1,-1) translate(" + width + "," + height + ")";
+                        break;
+                    case 4:
+                        patternTransform = "scale(-1,1) translate(" + width + ",0)";
+                        break;
+                }
+                var p = defs.append("pattern")
+                    .attr("id", "pattern_" + pi + "_" + visID)
+                    .attr("viewBox", "0 0 " + width + " " + height)
+                    .attr("width", "100%")
+                    .attr("height", "100%")
+                    .attr("patternTransform", patternTransform)
+                    .html("<rect fill=\"url(#pattern_" + visID + ")\" x=\"0\" y=\"0\" width=\"" + width + "\" height=\"" + height + "\"></rect>");
+                if (mirror !== "6") {
+                    p.select("rect").attr("mask", "url(#mask_" + visID + ")");
+                }
+            }
             var group = svg.append("g");
             var zoomScale = 1500000;
             if (bigLabel.length > 0 && smallLabel.length > 0) {
@@ -158,7 +206,11 @@ var render = function (cLatitude, cLongitude, innerColor, outerColor, modifyStro
                 maxStroke = 1;
             }
             var strokeScale = d3.scaleLinear().range([maxStroke, 1]).domain([0, maxDist]);
-            group.append("g").selectAll("line")
+            var lineContainer = pattern;
+            if (mirror === "1") {
+                lineContainer = group;
+            }
+            lineContainer.append("g").selectAll("line")
                 .data(lineData).enter().append("line")
                 .style("stroke", "url(#gradient_" + visID + ")")
                 .style("stroke-width", function (d) { return strokeScale(d.dist); })
@@ -172,6 +224,16 @@ var render = function (cLatitude, cLongitude, innerColor, outerColor, modifyStro
                 .delay(function (d) { return d.level * 50; })
                 .duration(50)
                 .style("opacity", 1);
+            if (mirror !== "1") {
+                for (var ri = 1; ri <= 4; ri += 1) {
+                    group.append("rect")
+                        .attr("x", 0)
+                        .attr("y", 0)
+                        .attr("width", width)
+                        .attr("height", height)
+                        .attr("fill", "url(#pattern_" + ri + "_" + visID + ")");
+                }
+            }
             var groupOffset = 0;
             if (smallLabel.length > 0) {
                 var offsetY = 30;
@@ -215,7 +277,7 @@ var render = function (cLatitude, cLongitude, innerColor, outerColor, modifyStro
             /* ---.--- OFFSCREEN RENDERING ---.--- */
             var offscreenSVG = d3.select("#gif-svg");
             offscreenSVG.selectAll("*").remove();
-            offscreenSVG.html(svgContainer.html().split("gradient_").join("gradient_alt_"));
+            offscreenSVG.html(svgContainer.html().split(visID).join("alt_" + visID));
             offscreenSVG.selectAll("line").data(lineData)
                 .style("opacity", 0);
             var bg = offscreenSVG.select("svg").insert("rect", ":first-child");
@@ -229,99 +291,119 @@ var render = function (cLatitude, cLongitude, innerColor, outerColor, modifyStro
                 .attr("width", width)
                 .attr("height", height);
             var offscreenContext = offscreenCanvas.node().getContext("2d");
-            var gif = new GIF({
-                height: height,
-                quality: 2,
-                width: width,
-                workerScript: "./js/gif.worker.js",
-                workers: 2,
-            });
-            var renderFrame = function (frameId) { return __awaiter(void 0, void 0, void 0, function () {
-                var canvgProcess, svgContent_1;
+            var addButtons = function () { return __awaiter(void 0, void 0, void 0, function () {
+                var svgContent;
                 return __generator(this, function (_a) {
-                    switch (_a.label) {
-                        case 0:
-                            offscreenSVG.selectAll("line")
-                                .style("opacity", function (d) {
-                                if (d.level < frameId) {
-                                    return 1;
-                                }
-                                return 0;
-                            });
-                            return [4 /*yield*/, canvg_1.default.fromString(offscreenContext, offscreenSVG.html())];
-                        case 1:
-                            canvgProcess = _a.sent();
-                            return [4 /*yield*/, canvgProcess.render()];
-                        case 2:
-                            _a.sent();
-                            gif.addFrame(offscreenContext, { copy: true, delay: 10 });
-                            if (frameId < maxLevels) {
-                                renderFrame(frameId + 1);
-                            }
-                            else {
-                                svgContent_1 = offscreenSVG.node().innerHTML;
-                                svgContent_1 = svgContent_1.replace("<svg", "<?xml version=\"1.0\" standalone=\"no\"?><svg xmlns:xlink=\"http://www.w3.org/1999/xlink\" xmlns=\"http://www.w3.org/2000/svg\"");
-                                gif.on("finished", function (blob) { return __awaiter(void 0, void 0, void 0, function () {
-                                    var canvgEndProcess;
-                                    return __generator(this, function (_a) {
-                                        switch (_a.label) {
-                                            case 0:
-                                                // render one big PNG for downloading
-                                                offscreenSVG.select("svg")
-                                                    .style("width", width * 5)
-                                                    .style("height", height * 5);
-                                                offscreenSVG.select("rect").remove();
-                                                offscreenCanvas
-                                                    .attr("width", width * 5)
-                                                    .attr("height", height * 5);
-                                                return [4 /*yield*/, canvg_1.default.fromString(offscreenContext, offscreenSVG.html())];
-                                            case 1:
-                                                canvgEndProcess = _a.sent();
-                                                return [4 /*yield*/, canvgEndProcess.render()];
-                                            case 2:
-                                                _a.sent();
-                                                svgContainer.append("a")
-                                                    .text("GIF")
-                                                    .attr("href", URL.createObjectURL(blob))
-                                                    .attr("download", "map.gif");
-                                                svgContainer.append("a")
-                                                    .text("PNG")
-                                                    .attr("href", offscreenCanvas.node().toDataURL())
-                                                    .attr("download", "map.png");
-                                                svgContainer.append("a")
-                                                    .text("SVG")
-                                                    .attr("href", URL.createObjectURL(new Blob([svgContent_1], { type: "image/svg+xml;charset=utf-8" })))
-                                                    .attr("download", "map.svg");
-                                                svgContainer.append("a")
-                                                    .text("Replay Animation")
-                                                    .on("click", function () {
-                                                    group.selectAll("line")
-                                                        .style("opacity", 0)
-                                                        .transition()
-                                                        .delay(function (d) { return d.level * 50; })
-                                                        .duration(50)
-                                                        .style("opacity", 1);
-                                                });
-                                                // Making sure the gif system is not taking up any ressources                      
-                                                gif.freeWorkers.forEach(function (worker) {
-                                                    worker.terminate();
-                                                });
-                                                gif.activeWorkers.forEach(function (worker) {
-                                                    worker.terminate();
-                                                });
-                                                gif = null;
-                                                resolve();
-                                                return [2 /*return*/];
-                                        }
-                                    });
-                                }); });
-                                gif.render();
-                            }
-                            return [2 /*return*/];
-                    }
+                    // render one big PNG for downloading
+                    offscreenSVG.select("svg")
+                        .style("width", width)
+                        .style("height", height);
+                    offscreenSVG.selectAll("line")
+                        .style("opacity", 1);
+                    offscreenSVG.select("rect").remove();
+                    svgContent = offscreenSVG.node().innerHTML;
+                    svgContent = svgContent.replace("<svg", "<?xml version=\"1.0\" standalone=\"no\"?><svg xmlns:xlink=\"http://www.w3.org/1999/xlink\" xmlns=\"http://www.w3.org/2000/svg\"");
+                    svgContainer.append("a")
+                        .text("SVG")
+                        .attr("href", URL.createObjectURL(new Blob([svgContent], { type: "image/svg+xml;charset=utf-8" })))
+                        .attr("download", "map.svg");
+                    svgContainer.append("a")
+                        .text("Replay Animation")
+                        .on("click", function () {
+                        lineContainer.selectAll("line")
+                            .style("opacity", 0)
+                            .transition()
+                            .delay(function (d) { return d.level * 50; })
+                            .duration(50)
+                            .style("opacity", 1);
+                    });
+                    resolve();
+                    return [2 /*return*/];
                 });
             }); };
-            renderFrame(0);
+            if (!svgOnly && mirror === "1") {
+                var gif_1 = new GIF({
+                    height: height,
+                    quality: 2,
+                    width: width,
+                    workerScript: "./js/gif.worker.js",
+                    workers: 2,
+                });
+                gif_1.on("finished", function (blob) { return __awaiter(void 0, void 0, void 0, function () {
+                    var canvgEndProcess;
+                    return __generator(this, function (_a) {
+                        switch (_a.label) {
+                            case 0:
+                                svgContainer.append("a")
+                                    .text("GIF")
+                                    .attr("href", URL.createObjectURL(blob))
+                                    .attr("download", "map.gif");
+                                offscreenSVG.select("svg")
+                                    .style("width", width * 5)
+                                    .style("height", height * 5);
+                                offscreenSVG.selectAll("line")
+                                    .style("opacity", 1);
+                                offscreenSVG.select("rect").remove();
+                                offscreenCanvas
+                                    .attr("width", width * 5)
+                                    .attr("height", height * 5);
+                                return [4 /*yield*/, canvg_1.default.fromString(offscreenContext, offscreenSVG.html())];
+                            case 1:
+                                canvgEndProcess = _a.sent();
+                                return [4 /*yield*/, canvgEndProcess.render()];
+                            case 2:
+                                _a.sent();
+                                svgContainer.append("a")
+                                    .text("PNG")
+                                    .attr("href", offscreenCanvas.node().toDataURL())
+                                    .attr("download", "map.png");
+                                addButtons();
+                                // Making sure the gif system is not taking up any ressources
+                                gif_1.freeWorkers.forEach(function (worker) {
+                                    worker.terminate();
+                                });
+                                gif_1.activeWorkers.forEach(function (worker) {
+                                    worker.terminate();
+                                });
+                                gif_1 = null;
+                                return [2 /*return*/];
+                        }
+                    });
+                }); });
+                var renderFrame_1 = function (frameId) { return __awaiter(void 0, void 0, void 0, function () {
+                    var canvgProcess;
+                    return __generator(this, function (_a) {
+                        switch (_a.label) {
+                            case 0:
+                                offscreenSVG.selectAll("line")
+                                    .style("opacity", function (d) {
+                                    if (d.level < frameId) {
+                                        return 1;
+                                    }
+                                    return 0;
+                                });
+                                return [4 /*yield*/, canvg_1.default.fromString(offscreenContext, offscreenSVG.html())];
+                            case 1:
+                                canvgProcess = _a.sent();
+                                return [4 /*yield*/, canvgProcess.render()];
+                            case 2:
+                                _a.sent();
+                                gif_1.addFrame(offscreenContext, { copy: true, delay: 10 });
+                                if (frameId < maxLevels) {
+                                    renderFrame_1(frameId + 1);
+                                }
+                                else {
+                                    gif_1.render();
+                                }
+                                return [2 /*return*/];
+                        }
+                    });
+                }); };
+                renderFrame_1(0);
+            }
+            else {
+                addButtons();
+            }
         };
         request.send(encodeURI("data=" + query));
     });

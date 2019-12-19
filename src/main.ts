@@ -44,7 +44,16 @@ centerControl.onAdd = function(map) {
 centerControl.addTo(selectionMap);
 
 d3.select("#btn-render").on("click", () => {
+  startRender(false);
+});
+
+d3.select("#btn-render-svg").on("click", () => {
+  startRender(true);
+});
+
+const startRender = (svgOnly: boolean) => {
   const latLng = selectionMap.getCenter();
+  const mirrorValue = (d3.select('input[name="mirror"]:checked').node() as HTMLInputElement).value;
   render(
     latLng.lat,
     latLng.lng,
@@ -53,9 +62,11 @@ d3.select("#btn-render").on("click", () => {
     d3.select("#stroke-control").property("checked"),
     d3.select("#label-big").property("value"),
     d3.select("#label-small").property("value"),
+    mirrorValue,
+    (svgOnly || mirrorValue !== "1") ? true : false,
   ).then(() => {
     // REMOVE OVERLAY
   }).catch((err) => {
     throw err;
   });
-});
+};
