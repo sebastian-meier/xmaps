@@ -320,7 +320,7 @@ var render = function (cLatitude, cLongitude, innerColor, outerColor, modifyStro
                         .attr("download", "map.svg");
                     svgContainer.append("a")
                         .attr("class", "btn repeat-btn")
-                        .text("Replay Animation")
+                        .html("Replay")
                         .on("click", function () {
                         lineContainer.selectAll("line")
                             .style("opacity", 0)

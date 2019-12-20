@@ -357,7 +357,7 @@ const render = (
 
         svgContainer.append("a")
           .attr("class", "btn repeat-btn")
-          .text("Replay Animation")
+          .html("Replay")
           .on("click", () => {
             lineContainer.selectAll("line")
               .style("opacity", 0)
