@@ -72,8 +72,7 @@ const startRender = (svgOnly: boolean) => {
   ).then((visID) => {
     const scrollPos = document.getElementById("container_" + visID)
       .getBoundingClientRect().top;
-    console.log(scrollPos);
-    window.scrollTo(0, scrollPos);
+    window.scrollTo(0, scrollPos + window.pageYOffset);
     d3.select("#overlay").style("display", "none");
   }).catch((err) => {
     throw err;

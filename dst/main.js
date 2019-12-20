@@ -49,8 +49,7 @@ var startRender = function (svgOnly) {
     render_1.render(latLng.lat, latLng.lng, d3.select("#color1").property("value"), d3.select("#color2").property("value"), d3.select("#stroke-control").property("checked"), d3.select("#label-big").property("value"), d3.select("#label-small").property("value"), mirrorValue, (svgOnly || mirrorValue !== "1") ? true : false, d3.select("#color3").property("value"), d3.select("#color4").property("value")).then(function (visID) {
         var scrollPos = document.getElementById("container_" + visID)
             .getBoundingClientRect().top;
-        console.log(scrollPos);
-        window.scrollTo(0, scrollPos);
+        window.scrollTo(0, scrollPos + window.pageYOffset);
         d3.select("#overlay").style("display", "none");
     }).catch(function (err) {
         throw err;
