@@ -55,6 +55,19 @@ var colorPicker = function (selectionId) {
         d3.select("#display-" + selectionId)
             .style("background-color", current);
     });
+    d3.select("#picker-" + selectionId).style("display", "none");
+    d3.select("#colortoggle-" + selectionId).on("click", function (d, i, a) {
+        var el = d3.select("#picker-" + selectionId);
+        if (el.style("display") === "block") {
+            el.style("display", "none");
+        }
+        else {
+            el.style("display", "block");
+        }
+    });
+    var currentVal = d3.select("#" + selectionId).property("value");
+    d3.select("#display-" + selectionId)
+        .style("background-color", currentVal);
 };
 exports.colorPicker = colorPicker;
 //# sourceMappingURL=colorPicker.js.map

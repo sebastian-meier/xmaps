@@ -47,7 +47,7 @@ var margin = 20;
 var radius = 200;
 var overpassRadius = 500;
 var maxDist = 0.5;
-var render = function (cLatitude, cLongitude, innerColor, outerColor, modifyStroke, bigLabel, smallLabel, mirror, svgOnly) {
+var render = function (cLatitude, cLongitude, innerColor, outerColor, modifyStroke, bigLabel, smallLabel, mirror, svgOnly, bgColor, textColor) {
     return new Promise(function (resolve, reject) {
         var visID = uuid();
         smallLabel = smallLabel.trim();
@@ -93,13 +93,21 @@ var render = function (cLatitude, cLongitude, innerColor, outerColor, modifyStro
                     startID = ni;
                 }
             });
-            var svgContainer = d3.select("#vis").insert("div", ":first-child");
+            var svgContainer = d3.select("#vis").insert("div", ":first-child")
+                .attr("id", "container_" + visID)
+                .append("div");
             var svg = svgContainer.append("svg")
                 .attr("id", "uuid_" + visID)
                 .attr("viewBox", "0 0 " + width + " " + height)
                 .attr("preserveAspectRatio", "xMidYMid meet")
                 .attr("width", width)
                 .attr("height", height);
+            svg.append("rect")
+                .attr("x", 0)
+                .attr("y", 0)
+                .attr("width", width)
+                .attr("height", height)
+                .style("fill", bgColor);
             var defs = svg.append("defs")
                 .html("<radialGradient gradientUnits=\"userSpaceOnUse\" id=\"gradient_" + visID + "\" cx=\"" + width / 2 + "\" cy=\"" + height / 2 + "\" r=\"" + radius + "\">        <stop style=\"stop-color:" + innerColor + ";\" offset=\"0%\"/>        <stop style=\"stop-color:" + outerColor + ";\" offset=\"100%\"/>      </radialGradient>");
             defs.append("mask")
@@ -241,6 +249,7 @@ var render = function (cLatitude, cLongitude, innerColor, outerColor, modifyStro
                     .text(smallLabel)
                     .style("font-size", "18px")
                     .style("text-anchor", "middle")
+                    .style("fill", textColor)
                     .attr("transform", "translate(" + width / 2 + ", " + (height - offsetY) + ")");
                 var bbox = smallLabelText.node().getBoundingClientRect();
                 var scale = (width - margin * 2) / bbox.width;
@@ -262,6 +271,7 @@ var render = function (cLatitude, cLongitude, innerColor, outerColor, modifyStro
                     .style("font-weight", "bold")
                     .style("font-size", "36px")
                     .attr("text-anchor", "middle")
+                    .style("fill", textColor)
                     .attr("transform", "translate(" + width / 2 + ", " + (height - offsetY) + ")");
                 var bbox = bigLabelText.node().getBoundingClientRect();
                 var scale = (width - margin * 2) / bbox.width;
@@ -304,10 +314,12 @@ var render = function (cLatitude, cLongitude, innerColor, outerColor, modifyStro
                     svgContent = offscreenSVG.node().innerHTML;
                     svgContent = svgContent.replace("<svg", "<?xml version=\"1.0\" standalone=\"no\"?><svg xmlns:xlink=\"http://www.w3.org/1999/xlink\" xmlns=\"http://www.w3.org/2000/svg\"");
                     svgContainer.append("a")
+                        .attr("class", "btn download-btn")
                         .text("SVG")
                         .attr("href", URL.createObjectURL(new Blob([svgContent], { type: "image/svg+xml;charset=utf-8" })))
                         .attr("download", "map.svg");
                     svgContainer.append("a")
+                        .attr("class", "btn repeat-btn")
                         .text("Replay Animation")
                         .on("click", function () {
                         lineContainer.selectAll("line")
@@ -317,7 +329,7 @@ var render = function (cLatitude, cLongitude, innerColor, outerColor, modifyStro
                             .duration(50)
                             .style("opacity", 1);
                     });
-                    resolve();
+                    resolve(visID);
                     return [2 /*return*/];
                 });
             }); };
@@ -335,6 +347,7 @@ var render = function (cLatitude, cLongitude, innerColor, outerColor, modifyStro
                         switch (_a.label) {
                             case 0:
                                 svgContainer.append("a")
+                                    .attr("class", "btn download-btn")
                                     .text("GIF")
                                     .attr("href", URL.createObjectURL(blob))
                                     .attr("download", "map.gif");
@@ -354,6 +367,7 @@ var render = function (cLatitude, cLongitude, innerColor, outerColor, modifyStro
                             case 2:
                                 _a.sent();
                                 svgContainer.append("a")
+                                    .attr("class", "btn download-btn")
                                     .text("PNG")
                                     .attr("href", offscreenCanvas.node().toDataURL())
                                     .attr("download", "map.png");

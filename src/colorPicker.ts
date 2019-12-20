@@ -60,6 +60,21 @@ const colorPicker = (selectionId: string) => {
       .style("background-color", current);
   });
 
+  d3.select("#picker-" + selectionId).style("display", "none");
+
+  d3.select("#colortoggle-" + selectionId).on("click", (d, i, a) => {
+    const el = d3.select("#picker-" + selectionId);
+    if (el.style("display") === "block") {
+      el.style("display", "none");
+    } else {
+      el.style("display", "block");
+    }
+  });
+
+  const currentVal = d3.select("#" + selectionId).property("value");
+  d3.select("#display-" + selectionId)
+    .style("background-color", currentVal);
+
 };
 
 export { colorPicker };

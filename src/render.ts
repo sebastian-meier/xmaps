@@ -21,6 +21,8 @@ const render = (
   smallLabel: string,
   mirror: string,
   svgOnly: boolean,
+  bgColor: string,
+  textColor: string,
 ): Promise<any> => {
 
   return new Promise((resolve, reject) => {
@@ -92,7 +94,9 @@ const render = (
         }
       });
 
-      const svgContainer = d3.select("#vis").insert("div", ":first-child");
+      const svgContainer = d3.select("#vis").insert("div", ":first-child")
+        .attr("id", "container_" + visID)
+        .append("div");
 
       const svg = svgContainer.append("svg")
         .attr("id", "uuid_" + visID)
@@ -100,6 +104,13 @@ const render = (
         .attr("preserveAspectRatio", "xMidYMid meet")
         .attr("width", width)
         .attr("height", height);
+
+      svg.append("rect")
+        .attr("x", 0)
+        .attr("y", 0)
+        .attr("width", width)
+        .attr("height", height)
+        .style("fill", bgColor);
 
       const defs = svg.append("defs")
         .html(`<radialGradient gradientUnits="userSpaceOnUse" id="gradient_${visID}" cx="${width / 2}" cy="${height / 2}" r="${radius}">\
@@ -266,6 +277,7 @@ const render = (
           .text(smallLabel)
           .style("font-size", "18px")
           .style("text-anchor", "middle")
+          .style("fill", textColor)
           .attr("transform", `translate(${width / 2}, ${height - offsetY})`);
 
         const bbox = smallLabelText.node().getBoundingClientRect();
@@ -288,6 +300,7 @@ const render = (
           .style("font-weight", "bold")
           .style("font-size", "36px")
           .attr("text-anchor", "middle")
+          .style("fill", textColor)
           .attr("transform", `translate(${width / 2}, ${height - offsetY})`);
 
         const bbox = bigLabelText.node().getBoundingClientRect();
@@ -337,11 +350,13 @@ const render = (
         svgContent = svgContent.replace("<svg", `<?xml version="1.0" standalone="no"?><svg xmlns:xlink="http://www.w3.org/1999/xlink" xmlns="http://www.w3.org/2000/svg"`);
 
         svgContainer.append("a")
+          .attr("class", "btn download-btn")
           .text("SVG")
           .attr("href", URL.createObjectURL(new Blob([svgContent], {type: "image/svg+xml;charset=utf-8"})))
           .attr("download", "map.svg");
 
         svgContainer.append("a")
+          .attr("class", "btn repeat-btn")
           .text("Replay Animation")
           .on("click", () => {
             lineContainer.selectAll("line")
@@ -352,7 +367,7 @@ const render = (
                   .style("opacity", 1);
                   });
 
-        resolve();
+        resolve(visID);
       };
 
       if (!svgOnly && mirror === "1") {
@@ -367,6 +382,7 @@ const render = (
         gif.on("finished", async (blob) => {
 
           svgContainer.append("a")
+            .attr("class", "btn download-btn")
             .text("GIF")
             .attr("href", URL.createObjectURL(blob))
             .attr("download", "map.gif");
@@ -388,6 +404,7 @@ const render = (
           await canvgEndProcess.render();
 
           svgContainer.append("a")
+            .attr("class", "btn download-btn")
             .text("PNG")
             .attr("href", offscreenCanvas.node().toDataURL())
             .attr("download", "map.png");

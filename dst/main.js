@@ -7,6 +7,8 @@ var colorPicker_1 = require("./colorPicker");
 var render_1 = require("./render");
 colorPicker_1.colorPicker("color1");
 colorPicker_1.colorPicker("color2");
+colorPicker_1.colorPicker("color3");
+colorPicker_1.colorPicker("color4");
 /* ---.--- ADDING THE MAP ---.--- */
 var cache = {};
 var longitude = 13.308507;
@@ -41,10 +43,15 @@ d3.select("#btn-render-svg").on("click", function () {
     startRender(true);
 });
 var startRender = function (svgOnly) {
+    d3.select("#overlay").style("display", "block");
     var latLng = selectionMap.getCenter();
     var mirrorValue = d3.select('input[name="mirror"]:checked').node().value;
-    render_1.render(latLng.lat, latLng.lng, d3.select("#color1").property("value"), d3.select("#color2").property("value"), d3.select("#stroke-control").property("checked"), d3.select("#label-big").property("value"), d3.select("#label-small").property("value"), mirrorValue, (svgOnly || mirrorValue !== "1") ? true : false).then(function () {
-        // REMOVE OVERLAY
+    render_1.render(latLng.lat, latLng.lng, d3.select("#color1").property("value"), d3.select("#color2").property("value"), d3.select("#stroke-control").property("checked"), d3.select("#label-big").property("value"), d3.select("#label-small").property("value"), mirrorValue, (svgOnly || mirrorValue !== "1") ? true : false, d3.select("#color3").property("value"), d3.select("#color4").property("value")).then(function (visID) {
+        var scrollPos = document.getElementById("container_" + visID)
+            .getBoundingClientRect().top;
+        console.log(scrollPos);
+        window.scrollTo(0, scrollPos);
+        d3.select("#overlay").style("display", "none");
     }).catch(function (err) {
         throw err;
     });

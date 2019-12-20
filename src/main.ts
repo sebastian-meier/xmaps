@@ -6,6 +6,8 @@ import { render } from "./render";
 
 colorPicker("color1");
 colorPicker("color2");
+colorPicker("color3");
+colorPicker("color4");
 
 /* ---.--- ADDING THE MAP ---.--- */
 
@@ -52,6 +54,7 @@ d3.select("#btn-render-svg").on("click", () => {
 });
 
 const startRender = (svgOnly: boolean) => {
+  d3.select("#overlay").style("display", "block");
   const latLng = selectionMap.getCenter();
   const mirrorValue = (d3.select('input[name="mirror"]:checked').node() as HTMLInputElement).value;
   render(
@@ -64,8 +67,14 @@ const startRender = (svgOnly: boolean) => {
     d3.select("#label-small").property("value"),
     mirrorValue,
     (svgOnly || mirrorValue !== "1") ? true : false,
-  ).then(() => {
-    // REMOVE OVERLAY
+    d3.select("#color3").property("value"),
+    d3.select("#color4").property("value"),
+  ).then((visID) => {
+    const scrollPos = document.getElementById("container_" + visID)
+      .getBoundingClientRect().top;
+    console.log(scrollPos);
+    window.scrollTo(0, scrollPos);
+    d3.select("#overlay").style("display", "none");
   }).catch((err) => {
     throw err;
   });
